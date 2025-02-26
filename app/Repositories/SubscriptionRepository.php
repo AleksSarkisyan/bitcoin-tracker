@@ -8,29 +8,6 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-    /**
-     * Get all subscriptions.
-     */
-    public function getAll(): Collection
-    {
-        return Subscription::all();
-    }
-
-    /**
-     * Find a subscription by its ID.
-     */
-    public function findById(int $id): ?Subscription
-    {
-        return Subscription::find($id);
-    }
-
-    /**
-     * Find all subscriptions by user ID.
-     */
-    public function findByUserId(int $userId): Collection
-    {
-        return Subscription::where('user_id', $userId)->get();
-    }
 
     /**
      * Create a new subscription.
@@ -46,14 +23,6 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
     public function update(int $id, array $data): bool
     {
         return Subscription::where('id', $id)->update($data);
-    }
-
-    /**
-     * Delete a subscription by ID.
-     */
-    public function delete(int $id): bool
-    {
-        return Subscription::destroy($id) > 0;
     }
 
     public function checkIfExists(array $data): bool | Collection
@@ -75,4 +44,28 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
 
         return $query;
     }
+
+    public function getPercentageSubscribers(array $times): mixed
+    {
+        $chunkSize = 100;
+        Subscription::whereNull('percent_change_notified_on')
+            ->whereIn('time_interval', $times)
+            ->chunk($chunkSize, function ($chunk) use (&$grouped) {
+                foreach ($chunk as $subscription) {
+                    $symbol = $subscription->symbol;
+                    $interval = $subscription->time_interval;
+
+                    if (!isset($grouped[$symbol])) {
+                        $grouped[$symbol] = [];
+                    }
+
+                    $grouped[$symbol][$interval][] = $subscription;
+                }
+            });
+
+            $groupedArray = $grouped;
+
+            return collect($groupedArray);
+    }
 }
+

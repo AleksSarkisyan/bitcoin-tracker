@@ -17,13 +17,47 @@ return [
                 'VOLUME',
                 'HIGH',
                 'LOW'
-            ]
             ],
+            'autoFormatResponse' => true
+        ],
         'tickers' => [
             'endpoint' => BITFINEX_V2_API_BASEURL . 'tickers'
+        ],
+        'candles' => [
+            'endpoint' => BITFINEX_V2_API_BASEURL . 'candles/',
+            'responseFields' => [
+                'MTS',
+                'OPEN',
+                'CLOSE',
+                'HIGH',
+                'LOW',
+                'VOLUME'
+            ],
+           'autoFormatResponse' => false
+        ],
+        'tickersHistory' => [
+            'endpoint' => BITFINEX_V2_API_BASEURL . 'tickers/hist',
+            'responseFields' => [
+                'SYMBOL',
+                'BID',
+                null,
+                'ASK',
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                'MTS'
+            ],
+           'autoFormatResponse' => false
         ]
     ],
     'v1' => [
         /** v1 configs go here */
-    ]
+    ],
+    'availableSymbols' => ['tBTCUSD', 'tBTCEUR'],
+    'availableIntervals' => ['1h', '6h', '24h']
 ];

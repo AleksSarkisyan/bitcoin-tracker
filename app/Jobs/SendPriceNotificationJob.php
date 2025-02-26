@@ -9,7 +9,6 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Batchable;
@@ -36,9 +35,9 @@ class SendPriceNotificationJob implements ShouldQueue
             );
 
             Log::info('Email sent successfully to: '. $this->subscriber['email']);
-    
+
             $this->subscriber->update(['target_price_notified_on' => Carbon::now()]);
-        } catch (\Throwable $th) {
+        } catch (\Exception $e) {
             Log::error('Failed to send email to: ' . $this->subscriber['email'] . ' - ' . $e->getMessage());
         }
     }

@@ -21,6 +21,7 @@ class Subscription extends Model
     protected $fillable = [
         'user_id',
         'email',
+        'symbol',
         'target_price',
         'percent_change',
         'time_interval',

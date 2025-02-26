@@ -4,17 +4,20 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Facades\Bitfinex;
-use App\Mail\PriceNotificationMail;
-use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendPriceNotificationJob;
-use App\Traits\SubscriptionTrait;
-use Illuminate\Bus\Batch;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Bus;
+use App\Repositories\SubscriptionRepositoryInterface;
 
 class PriceSubscriptionCommand extends Command
 {
-    use SubscriptionTrait;
+    protected $subscriptionRepository;
+
+    public function __construct(SubscriptionRepositoryInterface $subscriptionRepository)
+    {
+        parent::__construct();
+        $this->subscriptionRepository = $subscriptionRepository;
+    }
 
     /**
      * The name and signature of the console command.
@@ -44,12 +47,12 @@ class PriceSubscriptionCommand extends Command
         if (!$bitfinexApiData || isset($bitfinexApiData['error'])) {
             return false;
         }
-        
+
         $currentPrice = intval($bitfinexApiData['last_price']);
-        $subscribers = $this->subscriptionRepository()->getPriceSubscribers($currentPrice);
+        $subscribers = $this->subscriptionRepository->getPriceSubscribers($currentPrice);
 
         if (!$subscribers->count()) {
-            Log::info('Noting to process!');
+            Log::info('PriceSubscriptionCommand - Noting to process!');
             return false;
         }
 
@@ -57,7 +60,8 @@ class PriceSubscriptionCommand extends Command
 
         $subscribers->orderBy('id')
             ->chunkById($chunkSize, function ($subscribers) use ($bitfinexApiData) {
-                Log::info('Begin job processing for ' . $subscribers->count() . ' records');
+                Log::info('PriceSubscriptionCommand -Begin job processing for ' . $subscribers->count() . ' records');
+
                 $priceNotificationJobs = [];
                 foreach ($subscribers as $subscriber) {
                     $priceNotificationJobs[] = new SendPriceNotificationJob($subscriber, $bitfinexApiData['last_price']);

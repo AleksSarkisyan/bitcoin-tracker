@@ -7,22 +7,21 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Mail\Mailables\Address;
 
-class PriceNotificationMail extends Mailable
+class PercentageNotificationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
      * Create a new message instance.
      */
-    public $subscriber;
-    public $currentPrice;
+    public $user;
+    public $historyPercentageChange;
 
-    public function __construct($subscriber, $currentPrice)
+    public function __construct($user, $historyPercentageChange)
     {
-        $this->subscriber = $subscriber;
-        $this->currentPrice = $currentPrice;
+        $this->user = $user;
+        $this->historyPercentageChange = $historyPercentageChange;
     }
 
     /**
@@ -31,7 +30,7 @@ class PriceNotificationMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Price Notification Mail',
+            subject: 'Percentage Notification Mail',
         );
     }
 
@@ -41,7 +40,7 @@ class PriceNotificationMail extends Mailable
     public function content(): Content
     {
         return new Content(
-            view: 'mails.price_change',
+            view: 'mails.percentage_change',
         );
     }
 

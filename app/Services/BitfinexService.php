@@ -19,7 +19,7 @@ class BitfinexService
         if (!$endpointType || !isset($this->config[$endpointType])) {
             return $this->notFoundError();
         }
-        
+
         $url = $this->buildApiUrl($params, $endpointType);
 
         $result = Http::log()->get($url);
@@ -28,9 +28,11 @@ class BitfinexService
             return $this->responseError($result->status());
         }
 
-        $formattedResponse = $this->formatResponse($endpointType, $result->json());
+        if ($this->config[$endpointType]['autoFormatResponse']) {
+            return $this->formatResponse($endpointType, $result->json());
+        }
 
-        return $formattedResponse;
+        return $result->json();
     }
 
     public function post($path, $params = [])
@@ -57,7 +59,7 @@ class BitfinexService
     public function buildApiUrl($params, $endpointType)
     {
         $url = $this->config[$endpointType]['endpoint'];
-    
+
         if (isset($params['query'])) {
             $url .= $params['query'];
         }

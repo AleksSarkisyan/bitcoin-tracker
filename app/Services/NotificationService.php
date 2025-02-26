@@ -8,6 +8,7 @@ use App\Jobs\SendPercentageNotificationJob;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
 Use Carbon\Carbon;
+use App\Jobs\SendPriceNotificationJob;
 
 class NotificationService
 {
@@ -131,5 +132,37 @@ class NotificationService
     public function hasPriceJumped($userPercentageChange, $historyPercentageChange)
     {
         return $userPercentageChange > 0 && $historyPercentageChange >= $userPercentageChange;
+    }
+
+    public function processPriceSubscriptions()
+    {
+        $availableSymbols = config('bitfinex.availableSymbols');
+        $subscribers = [];
+        foreach ($availableSymbols as $symbol) {
+            $params = [
+                'query' => $symbol
+            ];
+
+            $bitfinexApiData[$symbol] = Bitfinex::get($endpointType = 'ticker', $params);
+
+            if (!$bitfinexApiData[$symbol] || isset($bitfinexApiData[$symbol]['error'])) {
+                return false;
+            }
+
+            $currentPrice[$symbol] = intval($bitfinexApiData[$symbol]['last_price']);
+            $subscribers[$symbol] = $this->subscriptionRepository->getPriceSubscribers($currentPrice[$symbol]);
+            $chunkSize = 100;
+
+            $subscribers[$symbol]->orderBy('id')
+                ->chunkById($chunkSize, function ($subscribers) use ($bitfinexApiData, $symbol) {
+                    Log::info('PriceSubscriptionCommand -Begin job processing for ' . $subscribers->count() . ' records');
+
+                    foreach ($subscribers as $subscriber) {
+                        $priceNotificationJobs[$symbol][] = new SendPriceNotificationJob($subscriber, $bitfinexApiData[$symbol]['last_price']);
+                    }
+
+                    Bus::batch($priceNotificationJobs[$symbol])->dispatch();
+            });
+        }
     }
 }

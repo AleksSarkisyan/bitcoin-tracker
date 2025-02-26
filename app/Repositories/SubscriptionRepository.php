@@ -37,9 +37,16 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
 
         $subscriptionsCount = $query->count();
 
-        /** Limits the number of emails to one if a user has created multiple price alerts and current asset price is above/below the alert price. */
+        /** Limits the number of emails to one per symbol and email per job run if a user has created multiple price alerts and current asset price is above the alert price. */
         if ($subscriptionsCount > 1) {
-            $query->whereRaw('id IN (SELECT MIN(id) FROM subscriptions GROUP BY email)');
+            $subQuery = Subscription::selectRaw('MIN(id)')
+                ->where('target_price', '<', $currentPrice)
+                ->whereNull('target_price_notified_on')
+                ->groupBy('email', 'symbol');
+
+            $query = Subscription::where('target_price', '<', $currentPrice)
+                ->whereNull('target_price_notified_on')
+                ->whereIn('id', $subQuery);
         }
 
         return $query;

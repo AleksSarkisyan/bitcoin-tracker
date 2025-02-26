@@ -3,11 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Facades\Bitfinex;
-use App\Jobs\SendPriceNotificationJob;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Bus;
 use App\Repositories\SubscriptionRepositoryInterface;
+use App\Facades\Notification;
 
 class PriceSubscriptionCommand extends Command
 {
@@ -38,38 +35,8 @@ class PriceSubscriptionCommand extends Command
      */
     public function handle()
     {
-        $params = [
-            'query' => 'tBTCUSD'
-        ];
+        Notification::processPriceSubscriptions();
 
-        $bitfinexApiData = Bitfinex::get($endpointType = 'ticker', $params);
-
-        if (!$bitfinexApiData || isset($bitfinexApiData['error'])) {
-            return false;
-        }
-
-        $currentPrice = intval($bitfinexApiData['last_price']);
-        $subscribers = $this->subscriptionRepository->getPriceSubscribers($currentPrice);
-
-        if (!$subscribers->count()) {
-            Log::info('PriceSubscriptionCommand - Noting to process!');
-            return false;
-        }
-
-        $chunkSize = 100;
-
-        $subscribers->orderBy('id')
-            ->chunkById($chunkSize, function ($subscribers) use ($bitfinexApiData) {
-                Log::info('PriceSubscriptionCommand -Begin job processing for ' . $subscribers->count() . ' records');
-
-                $priceNotificationJobs = [];
-                foreach ($subscribers as $subscriber) {
-                    $priceNotificationJobs[] = new SendPriceNotificationJob($subscriber, $bitfinexApiData['last_price']);
-                }
-
-                Bus::batch($priceNotificationJobs)->dispatch();
-
-                return true;
-        });
+        return true;
     }
 }

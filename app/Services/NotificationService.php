@@ -164,5 +164,7 @@ class NotificationService
                     Bus::batch($priceNotificationJobs[$symbol])->dispatch();
             });
         }
+
+        return true;
     }
 }

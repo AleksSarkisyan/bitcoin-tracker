@@ -38,7 +38,7 @@ class SendPercentageNotificationJob implements ShouldQueue
 
             $this->user->update(['percent_change_notified_on' => Carbon::now()]);
         } catch (\Exception $e) {
-            Log::error('SendPercentageNotificationJob - Failed to send email to: ' . $this->user->email . ' - ' . $e->getMessage());
+            Log::error('SendPercentageNotificationJob - Failed to send email to: ' . $this->user['email'] . ' - ' . $e->getMessage());
         }
     }
 }

@@ -30,7 +30,7 @@ class SendPriceNotificationJobTest extends TestCase
 
         Log::shouldReceive('info')
             ->once()
-            ->with('Email sent successfully to: ' . $this->fakeEmail);
+            ->with('SendPriceNotificationJob - Email sent successfully to: ' . $this->fakeEmail);
 
         $subscriber = new FakeSubscriber(['email' => $this->fakeEmail]);
 
@@ -57,7 +57,7 @@ class SendPriceNotificationJobTest extends TestCase
         Log::shouldReceive('error')
             ->once()
             ->with(\Mockery::on(function ($message) {
-                return strpos($message, 'Failed to send email to: ' . $this->fakeEmail) !== false;
+                return strpos($message, 'SendPriceNotificationJob - Failed to send email to: ' . $this->fakeEmail) !== false;
             }));
 
         $subscriber = new FakeSubscriber(['email' => $this->fakeEmail]);

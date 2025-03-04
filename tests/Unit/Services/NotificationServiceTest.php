@@ -160,10 +160,8 @@ class NotificationServiceTest extends TestCase
 
         $this->subscriptionRepository->shouldReceive('getPriceSubscribers')
             ->once()
-            ->with(1000)
+            ->with(1000, 'tBTCUSD')
             ->andReturn(Subscription::query());
-
-        Log::shouldReceive('info')->with(Mockery::any())->zeroOrMoreTimes();
 
         Bus::fake();
 

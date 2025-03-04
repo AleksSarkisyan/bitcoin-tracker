@@ -26,6 +26,7 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
     public function getPriceSubscribers(int $currentPrice, $symbol): mixed
     {
         $query = Subscription::where('target_price', '<', $currentPrice)
+            ->where('symbol', $symbol)
             ->whereNull('target_price_notified_on');
 
         $subscriptionsCount = $query->count();

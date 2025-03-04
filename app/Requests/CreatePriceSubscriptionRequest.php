@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace App\Requests;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,7 +9,8 @@ class CreatePriceSubscriptionRequest extends FormRequest
     {
         return [
             'email' => 'required|email',
-            'target_price' => 'required|numeric|min:1'
+            'target_price' => 'required|numeric|min:1',
+            'symbol' => 'required|string'
         ];
     }
 

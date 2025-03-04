@@ -3,19 +3,10 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Repositories\SubscriptionRepositoryInterface;
 use App\Facades\Notification;
 
 class PriceSubscriptionCommand extends Command
 {
-    protected $subscriptionRepository;
-
-    public function __construct(SubscriptionRepositoryInterface $subscriptionRepository)
-    {
-        parent::__construct();
-        $this->subscriptionRepository = $subscriptionRepository;
-    }
-
     /**
      * The name and signature of the console command.
      *

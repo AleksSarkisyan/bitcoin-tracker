@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Batchable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\DB;
 
 class SendPriceNotificationJob implements ShouldQueue
 {
@@ -19,11 +21,17 @@ class SendPriceNotificationJob implements ShouldQueue
 
     protected $subscriber;
     protected $currentPrice;
+    protected $tries = 3;
 
     public function __construct($subscriber, $currentPrice)
     {
         $this->subscriber = $subscriber;
         $this->currentPrice = $currentPrice;
+    }
+
+    public function middleware(): array
+    {
+        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))->dontRelease()];
     }
 
     public function handle()
@@ -34,11 +42,19 @@ class SendPriceNotificationJob implements ShouldQueue
                 $this->currentPrice)
             );
 
-            Log::info('Email sent successfully to: '. $this->subscriber['email']);
+            Log::info('SendPriceNotificationJob - Email sent successfully to: '. $this->subscriber['email']);
 
-            $this->subscriber->update(['target_price_notified_on' => Carbon::now()]);
+            DB::transaction(function () {
+                $this->subscriber->update(['target_price_notified_on' => Carbon::now()]);
+            });
         } catch (\Exception $e) {
-            Log::error('Failed to send email to: ' . $this->subscriber['email'] . ' - ' . $e->getMessage());
+            Log::error('SendPriceNotificationJob - Failed to send email to: ' . $this->subscriber['email'] . ' - ' . $e->getMessage());
         }
+    }
+
+    public function failed(\Exception $exception)
+    {
+        Log::info('SendPriceNotificationJob -Sending email failed: '. $this->subscriber['email'] . ' - ' . $exception->getMessage());
+        /** Additional logic to handle failed jobs */
     }
 }

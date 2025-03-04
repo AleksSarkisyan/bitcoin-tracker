@@ -25,15 +25,11 @@ class NotificationService
 
     public function processPercentageSubscriptions()
     {
+        $queryStart = microtime(true);
         $percentageSubscribers = $this->subscriptionRepository->getPercentageSubscribers($this->availableIntervals);
 
-        if (!$percentageSubscribers) {
-            $message = 'PercentageSubscriptionCommand - Nothing to process!';
-            Log::info($message);
-            exit($message);
-        }
-
-        Log::info('PercentageSubscriptionCommand - Found ' . count($percentageSubscribers) . ' records.');
+        $duration = microtime(true) - $queryStart;
+        Log::info('getPercentageSubscribers query executed in ' . $duration . ' seconds', []);
 
         $symbols = $this->getSymbols($percentageSubscribers);
 
@@ -80,11 +76,11 @@ class NotificationService
                 $userPercentageChange = $user->percent_change;
 
                 Log::info('PercentageSubscriptionCommand - History data for ' . $user->symbol .' and interval ' . $user->time_interval . ' - ' . $historyPercentageChange);
-                Log::info('PercentageSubscriptionCommand -  user id ' . $user->id . ' percentage ' . $userPercentageChange);
+                Log::info('PercentageSubscriptionCommand - User id ' . $user->id . ' percentage ' . $userPercentageChange);
 
                 if ($this->hasPriceDropped($userPercentageChange, $historyPercentageChange) ||
                     ($this->hasPriceJumped($userPercentageChange, $historyPercentageChange))) {
-                    Log::info('PercentageSubscriptionCommand - Condition met for user id' . $user->id);
+                    Log::info('PercentageSubscriptionCommand - Condition met for user id -' . $user->id);
                     $percentageJobs[] = new SendPercentageNotificationJob($user, $historyPercentageChange);
                 }
             }
@@ -137,6 +133,7 @@ class NotificationService
     public function processPriceSubscriptions()
     {
         $availableSymbols = config('bitfinex.availableSymbols');
+
         $subscribers = [];
         foreach ($availableSymbols as $symbol) {
             $params = [
@@ -150,12 +147,14 @@ class NotificationService
             }
 
             $currentPrice[$symbol] = intval($bitfinexApiData[$symbol]['last_price']);
-            $subscribers[$symbol] = $this->subscriptionRepository->getPriceSubscribers($currentPrice[$symbol]);
+
+            $queryStart[$symbol] = microtime(true);
+            $subscribers[$symbol] = $this->subscriptionRepository->getPriceSubscribers($currentPrice[$symbol], $symbol);
             $chunkSize = 100;
 
             $subscribers[$symbol]->orderBy('id')
                 ->chunkById($chunkSize, function ($subscribers) use ($bitfinexApiData, $symbol) {
-                    Log::info('PriceSubscriptionCommand -Begin job processing for ' . $subscribers->count() . ' records');
+                    Log::info('PriceSubscriptionCommand - Begin job processing for ' . $subscribers->count() . ' records');
 
                     foreach ($subscribers as $subscriber) {
                         $priceNotificationJobs[$symbol][] = new SendPriceNotificationJob($subscriber, $bitfinexApiData[$symbol]['last_price']);
@@ -163,6 +162,9 @@ class NotificationService
 
                     Bus::batch($priceNotificationJobs[$symbol])->dispatch();
             });
+
+            $duration = microtime(true) - $queryStart[$symbol];
+            Log::info('getPriceSubscribers query executed in ' . $duration . ' seconds', [$symbol]);
         }
 
         return true;

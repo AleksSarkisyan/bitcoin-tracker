@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Batchable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\DB;
 
 class SendPercentageNotificationJob implements ShouldQueue
 {
@@ -19,11 +21,17 @@ class SendPercentageNotificationJob implements ShouldQueue
 
     protected $user;
     protected $historyPercentageChange;
+    protected $tries = 3;
 
     public function __construct($user, $historyPercentageChange)
     {
         $this->user = $user;
         $this->historyPercentageChange = $historyPercentageChange;
+    }
+
+    public function middleware(): array
+    {
+        return [(new WithoutOverlapping($this->user->id . $this->user->email))->dontRelease()];
     }
 
     public function handle()
@@ -36,9 +44,17 @@ class SendPercentageNotificationJob implements ShouldQueue
 
             Log::info('SendPercentageNotificationJob - Email sent successfully to: '. $this->user['email']);
 
-            $this->user->update(['percent_change_notified_on' => Carbon::now()]);
+            DB::transaction(function () {
+                $this->user->update(['percent_change_notified_on' => Carbon::now()]);
+            });
         } catch (\Exception $e) {
             Log::error('SendPercentageNotificationJob - Failed to send email to: ' . $this->user['email'] . ' - ' . $e->getMessage());
         }
+    }
+
+    public function failed(\Exception $exception)
+    {
+        Log::info('SendPercentageNotificationJob - Sending email failed: '. $this->user['email'] . ' - ' . $exception->getMessage());
+        /** Additional logic to handle failed jobs */
     }
 }

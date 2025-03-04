@@ -9,7 +9,7 @@ use App\Models\Subscription;
 abstract class TestCase extends BaseTestCase
 {
     public $fakeEmail = 'test@example.com';
-    //public $subscriber;
+    public $subscriber;
     public $fakeUser = [
         'email' => 'test@example.com',
         'target_price' => 80000,

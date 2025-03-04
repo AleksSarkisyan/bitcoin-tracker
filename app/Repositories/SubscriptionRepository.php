@@ -4,22 +4,14 @@ namespace App\Repositories;
 
 use App\Models\Subscription;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Builder;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-
-    /**
-     * Create a new subscription.
-     */
     public function create(array $data): Subscription
     {
         return Subscription::create($data);
     }
 
-    /**
-     * Update a subscription by ID.
-     */
     public function update(int $id, array $data): bool
     {
         return Subscription::where('id', $id)->update($data);
@@ -30,14 +22,14 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
         return Subscription::where($data)->get();
     }
 
-    public function getPriceSubscribers(int $currentPrice): null | Collection | Subscription | Builder
+    /** Potentially add some adequate limit that will allow handling as many records as the job duration allows. */
+    public function getPriceSubscribers(int $currentPrice, $symbol): mixed
     {
         $query = Subscription::where('target_price', '<', $currentPrice)
             ->whereNull('target_price_notified_on');
 
         $subscriptionsCount = $query->count();
 
-        /** Limits the number of emails to one per symbol and email per job run if a user has created multiple price alerts and current asset price is above the alert price. */
         if ($subscriptionsCount > 1) {
             $subQuery = Subscription::selectRaw('MIN(id)')
                 ->where('target_price', '<', $currentPrice)

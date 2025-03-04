@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Models\Subscription;
 use Illuminate\Support\Collection;
-use Illuminate\Database\Eloquent\Builder;
 
 interface SubscriptionRepositoryInterface
 {
@@ -14,8 +13,7 @@ interface SubscriptionRepositoryInterface
 
     public function checkIfExists(array $data): bool | Collection;
 
-    public function getPriceSubscribers(int $currentPrice): null | Collection | Subscription | Builder;
+    public function getPriceSubscribers(int $currentPrice, $symbol): mixed;
 
     public function getPercentageSubscribers(array $times): mixed;
-
 }

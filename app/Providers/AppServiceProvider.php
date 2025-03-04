@@ -5,6 +5,8 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Repositories\SubscriptionRepositoryInterface;
 use App\Repositories\SubscriptionRepository;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // DB::listen(function ($query) {
+        //     Log::info('Query Time: ' . $query->time . 'ms | SQL: ' . $query->sql);
+        // });
     }
 }

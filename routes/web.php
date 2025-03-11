@@ -11,8 +11,5 @@ Route::get('/', function () {
 
 
 Route::get('/subscribe', [SubscriptionController::class, 'showSubscribeForm']);
-
-Route::post('/price-subscription', [SubscriptionController::class, 'priceSubscription']);
-
-Route::post('/percentage-subscription', [SubscriptionController::class, 'percentSubscription']);
+Route::post('/subscribe', [SubscriptionController::class, 'handleSubscription']);
 

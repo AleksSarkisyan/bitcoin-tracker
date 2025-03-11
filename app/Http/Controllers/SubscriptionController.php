@@ -2,19 +2,22 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\SubscriptionTypes;
 use App\Facades\AssetPrice;
 use App\Facades\Notification;
 use Illuminate\View\View;
 use App\Requests\CreatePriceSubscriptionRequest;
 use App\Requests\CreatePercentageSubscriptionRequest;
 use App\Interfaces\SubscriptionRepositoryInterface;
+use App\Requests\BaseSubscriptionRequest;
 use Illuminate\Http\RedirectResponse;
-
 
 
 class SubscriptionController extends Controller
 {
     protected $subscriptionRepository;
+    public $priceSubscriptionType = SubscriptionTypes::PRICE->value;
+    public $percentageSubscriptionType = SubscriptionTypes::PERCENTAGE->value;
 
     public function __construct(SubscriptionRepositoryInterface $subscriptionRepository)
     {
@@ -32,28 +35,39 @@ class SubscriptionController extends Controller
         ]);
     }
 
-    public function priceSubscription(CreatePriceSubscriptionRequest $request): RedirectResponse
+    public function handleSubscription(BaseSubscriptionRequest $request): RedirectResponse
     {
-        $exists = $this->subscriptionRepository->checkIfExists($request->validated());
+        $type = $request->get('type');
+        $rules = $this->getRules($type);
+        $params = $request->validate($rules);
 
-        if (!$exists->count()) {
-            $subs = $this->subscriptionRepository->create($request->validated());
-            return redirect()->back()->with('message', 'Thanks for subscribing. We will notify you by email.');
-        }
-
-        return redirect()->back()->with('message', 'This email has already been subscribed for the entered price.');
-    }
-
-    public function percentSubscription(CreatePercentageSubscriptionRequest $request): RedirectResponse
-    {
-        $params = $request->validated();
         $exists = $this->subscriptionRepository->checkIfExists($params);
 
         if (!$exists->count()) {
             $this->subscriptionRepository->create($params);
-            return redirect()->back()->with('messagePercentage', 'Thanks for subscribing for % change. We will notify you by email.');
+            return redirect()->back()->with($this->getMessageByType($type), config('messages.' . $type . '.success'));
         }
 
-        return redirect()->back()->with('messagePercentage', 'You have already subscribed for this time period, percentage and symbol. Choose different combination.');
+        return redirect()->back()->with($this->getMessageByType($type), config('messages.' . $type . '.error'));
+    }
+
+    public function getRules(string $type)
+    {
+        $rules = [
+            $this->priceSubscriptionType => (new CreatePriceSubscriptionRequest())->rules(),
+            $this->percentageSubscriptionType => (new CreatePercentageSubscriptionRequest())->rules()
+        ];
+
+        return $rules[$type];
+    }
+
+    public function getMessageByType(string $type)
+    {
+        $messageLabels = [
+            $this->priceSubscriptionType => 'message',
+            $this->percentageSubscriptionType => 'messagePercentage'
+        ];
+
+        return $messageLabels[$type];
     }
 }

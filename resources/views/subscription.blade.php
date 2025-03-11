@@ -8,7 +8,7 @@
 
         <div class="section contact d-flex w-100">
             <div class="col-md-6 col-xs-12 form">
-                <form action="price-subscription" method="POST">
+                <form action="subscribe" method="POST">
                     @csrf
                     <div class="form-group text-left">
                         <label for="email">Email</label>
@@ -25,6 +25,7 @@
                         @endforeach
                     </select>
 
+                    <input type="hidden" name="type" value="price">
                     <button type="submit" class="btn primary-bg mt-3"><strong>Send</strong></button>
 
                     @if ($errors->any())
@@ -51,7 +52,7 @@
 
         <div class="section contact d-flex w-100">
             <div class="col-md-6 col-xs-12 form">
-                <form action="percentage-subscription" method="POST">
+                <form action="subscribe" method="POST">
                     @csrf
                     <div class="form-group text-left">
                         <label for="email">Email</label>
@@ -79,6 +80,8 @@
                             @endforeach
                         </select>
                     </div>
+
+                    <input type="hidden" name="type" value="percentage">
 
                     <button type="submit" class="btn primary-bg mt-3"><strong>Send</strong></button>
 

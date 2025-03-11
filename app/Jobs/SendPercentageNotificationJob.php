@@ -8,53 +8,50 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Bus\Batchable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 class SendPercentageNotificationJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $user;
+    protected $subscriber;
     protected $historyPercentageChange;
     protected $tries = 3;
 
-    public function __construct($user, $historyPercentageChange)
+    public function __construct($subscriber, $historyPercentageChange)
     {
-        $this->user = $user;
+        $this->subscriber = $subscriber;
         $this->historyPercentageChange = $historyPercentageChange;
     }
 
     public function middleware(): array
     {
-        return [(new WithoutOverlapping($this->user->id . $this->user->email))->dontRelease()];
+        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))->dontRelease()];
     }
 
     public function handle()
     {
         try {
-            Mail::to($this->user['email'])->send(
-                new PercentageNotificationMail($this->user,
-                $this->historyPercentageChange)
-            );
+            // Mail::to($this->subscriber->email)->send(
+            //     new PercentageNotificationMail($this->subscriber,
+            //     $this->historyPercentageChange)
+            // );
 
-            Log::info('SendPercentageNotificationJob - Email sent successfully to: '. $this->user['email']);
+            Log::info('SendPercentageNotificationJob - Email sent successfully to: '. $this->subscriber->email);
 
-            DB::transaction(function () {
-                $this->user->update(['percent_change_notified_on' => Carbon::now()]);
-            });
+            $this->subscriber->update(['percent_change_notified_on' => Carbon::now()]);
         } catch (\Exception $e) {
-            Log::error('SendPercentageNotificationJob - Failed to send email to: ' . $this->user['email'] . ' - ' . $e->getMessage());
+            Log::error('SendPercentageNotificationJob - Failed to send email to: ' . $this->subscriber->email . ' - ' . $e->getMessage());
         }
     }
 
     public function failed(\Exception $exception)
     {
-        Log::info('SendPercentageNotificationJob - Sending email failed: '. $this->user['email'] . ' - ' . $exception->getMessage());
+        Log::info('SendPercentageNotificationJob - Sending email failed: '. $this->subscriber->email . ' - ' . $exception->getMessage());
         /** Additional logic to handle failed jobs */
     }
 }

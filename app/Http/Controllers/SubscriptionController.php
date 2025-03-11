@@ -2,10 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Facades\AssetPrice;
+use App\Facades\Notification;
 use Illuminate\View\View;
 use App\Requests\CreatePriceSubscriptionRequest;
 use App\Requests\CreatePercentageSubscriptionRequest;
-use App\Repositories\SubscriptionRepositoryInterface;
+use App\Interfaces\SubscriptionRepositoryInterface;
+use Illuminate\Http\RedirectResponse;
+
+
 
 class SubscriptionController extends Controller
 {
@@ -18,13 +23,16 @@ class SubscriptionController extends Controller
 
     public function showSubscribeForm(): View
     {
+        // AssetPrice::create();
+        // Notification::processPercentageSubscriptions();
+        // Notification::processPriceSubscriptions();
         return view('subscription', [
             'timeIntervals' => config('bitfinex.availableIntervals'),
             'symbols' => config('bitfinex.availableSymbols')
         ]);
     }
 
-    public function priceSubscription(CreatePriceSubscriptionRequest $request)
+    public function priceSubscription(CreatePriceSubscriptionRequest $request): RedirectResponse
     {
         $exists = $this->subscriptionRepository->checkIfExists($request->validated());
 
@@ -36,7 +44,7 @@ class SubscriptionController extends Controller
         return redirect()->back()->with('message', 'This email has already been subscribed for the entered price.');
     }
 
-    public function percentSubscription(CreatePercentageSubscriptionRequest $request)
+    public function percentSubscription(CreatePercentageSubscriptionRequest $request): RedirectResponse
     {
         $params = $request->validated();
         $exists = $this->subscriptionRepository->checkIfExists($params);

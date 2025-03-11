@@ -3,10 +3,12 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use App\Repositories\SubscriptionRepositoryInterface;
+use App\Interfaces\SubscriptionRepositoryInterface;
 use App\Repositories\SubscriptionRepository;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Interfaces\AssetPriceRepositoryInterface;
+use App\Repositories\AssetPriceRepository;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(SubscriptionRepositoryInterface::class, SubscriptionRepository::class);
+        $this->app->bind(AssetPriceRepositoryInterface::class, AssetPriceRepository::class);
     }
 
     /**

@@ -52,7 +52,8 @@ return [
                 null,
                 'MTS'
             ],
-           'autoFormatResponse' => false
+           'autoFormatResponse' => false,
+           'withAdditionalLogs' => false
         ]
     ],
     'v1' => [

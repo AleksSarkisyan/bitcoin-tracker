@@ -4,9 +4,19 @@ namespace App\Repositories;
 
 use App\Models\Subscription;
 use Illuminate\Support\Collection;
+use App\Interfaces\SubscriptionRepositoryInterface;
+use App\Dtos\UniquePairsDto;
+use Illuminate\Database\Eloquent\Builder;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
+    public int $chinkSize;
+
+    public function __construct()
+    {
+        $this->chinkSize = 100;
+    }
+
     public function create(array $data): Subscription
     {
         return Subscription::create($data);
@@ -22,8 +32,8 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
         return Subscription::where($data)->get();
     }
 
-    /** Potentially add some adequate limit that will allow handling as many records as the job duration allows. */
-    public function getPriceSubscribers(int $currentPrice, $symbol): mixed
+    /** Potentially add some adequate limit that will allow handling as many records as a single cron can handle. */
+    public function getPriceSubscribers(int $currentPrice, string $symbol): Builder
     {
         $query = Subscription::where('target_price', '<', $currentPrice)
             ->where('symbol', $symbol)
@@ -42,30 +52,26 @@ class SubscriptionRepository implements SubscriptionRepositoryInterface
                 ->whereIn('id', $subQuery);
         }
 
+        // dd($query->toSql(), $query->getBindings());
         return $query;
     }
 
-    public function getPercentageSubscribers(array $times): mixed
+    public function getUniqueSymbolHourPairs(): Collection
     {
-        $chunkSize = 100;
-        Subscription::whereNull('percent_change_notified_on')
-            ->whereIn('time_interval', $times)
-            ->chunk($chunkSize, function ($chunk) use (&$grouped) {
-                foreach ($chunk as $subscription) {
-                    $symbol = $subscription->symbol;
-                    $interval = $subscription->time_interval;
+        $uniquePairs = Subscription::select('time_interval', 'symbol')
+            ->whereNotNull('time_interval')
+            ->distinct()
+            ->get();
 
-                    if (!isset($grouped[$symbol])) {
-                        $grouped[$symbol] = [];
-                    }
+        return UniquePairsDto::collect($uniquePairs, Collection::class);
+    }
 
-                    $grouped[$symbol][$interval][] = $subscription;
-                }
-            });
+    public function getPercentageSubscribers(array $times): Builder
+    {
+        $query = Subscription::whereNull('percent_change_notified_on')
+            ->whereIn('time_interval', $times);
 
-            $groupedArray = $grouped;
-
-            return collect($groupedArray);
+            return $query;
     }
 }
 

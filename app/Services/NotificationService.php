@@ -53,7 +53,7 @@ class NotificationService extends ServiceProvider
         Log::info($this->percentageNotificationJob . ' getPercentageSubscribers query executed in ' . $duration . ' seconds', []);
 
         $percentageSubscribers->orderBy('id')->chunkById($this->chunkSize, function ($percentageSubscribers) use ($currentPrices) {
-            Log::info($this->percentageNotificationJob .' - Begin job processing for ' . $percentageSubscribers->count() . ' records');
+            Log::info($this->percentageNotificationJob .' - Found ' . $percentageSubscribers->count() . ' records');
 
             $percentageJobs = [];
 
@@ -132,7 +132,7 @@ class NotificationService extends ServiceProvider
 
             $subscribers->orderBy('id')
                 ->chunkById($this->chunkSize, function ($subscribers) use ($asset) {
-                    Log::info($this->priceNotificationJob . ' Begin job processing for ' . $subscribers->count() . ' records');
+                    Log::info($this->priceNotificationJob . ' Found ' . $subscribers->count() . ' records');
 
                     foreach ($subscribers as $subscriber) {
                         $priceNotificationJobs[] = new SendPriceNotificationJob($subscriber, $asset['current_price']);

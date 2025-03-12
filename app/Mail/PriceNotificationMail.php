@@ -2,56 +2,17 @@
 
 namespace App\Mail;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Mail\Mailables\Address;
+use App\Mail\BaseNotificationMail;
 
-class PriceNotificationMail extends Mailable
+class PriceNotificationMail extends BaseNotificationMail
 {
-    use Queueable, SerializesModels;
-
-    /**
-     * Create a new message instance.
-     */
-    public $subscriber;
-    public $currentPrice;
-
-    public function __construct($subscriber, $currentPrice)
+    public function getEnvelopeSubject(): string
     {
-        $this->subscriber = $subscriber;
-        $this->currentPrice = $currentPrice;
+        return 'Price Notification Mail';
     }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
+    public function getMailType(): string
     {
-        return new Envelope(
-            subject: 'Price Notification Mail',
-        );
-    }
-
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            view: 'mails.price_change',
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+        return $this->priceSubscriptionType;
     }
 }

@@ -62,7 +62,7 @@ abstract class BaseMailNotificationJob implements ShouldQueue
         try {
             $mailClass = $this->getMailClass();
             $mailInstance = new $mailClass($this->subscriber, $this->additionData);
-            // Mail::to($this->subscriber->email)->send($mailInstance);
+            Mail::to($this->subscriber->email)->send($mailInstance);
 
             Log::info($this->getSuccessLogMessage());
 

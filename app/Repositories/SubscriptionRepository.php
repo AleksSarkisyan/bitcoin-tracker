@@ -10,11 +10,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SubscriptionRepository implements SubscriptionRepositoryInterface
 {
-    public int $chinkSize;
+    public int $chunkSize;
 
     public function __construct()
     {
-        $this->chinkSize = 100;
+        $this->chunkSize = 100;
     }
 
     public function create(array $data): Subscription

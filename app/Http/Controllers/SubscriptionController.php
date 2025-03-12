@@ -28,7 +28,7 @@ class SubscriptionController extends Controller
     {
         // AssetPrice::create();
         // Notification::processPercentageSubscriptions();
-        // Notification::processPriceSubscriptions();
+        Notification::processPriceSubscriptions();
         return view('subscription', [
             'timeIntervals' => config('bitfinex.availableIntervals'),
             'symbols' => config('bitfinex.availableSymbols')

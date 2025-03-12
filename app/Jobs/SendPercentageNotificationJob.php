@@ -3,57 +3,22 @@
 namespace App\Jobs;
 
 use App\Mail\PercentageNotificationMail;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Bus\Batchable;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
-use Illuminate\Support\Facades\Mail;
+use App\Jobs\BaseMailNotificationJob;
 
-class SendPercentageNotificationJob implements ShouldQueue
+class SendPercentageNotificationJob extends BaseMailNotificationJob
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /** @var \App\Models\Subscription $subscriber */
-    public $subscriber;
-    public $historyPercentageChange;
-    public $tries = 3;
-
-    public function __construct($subscriber, $historyPercentageChange)
+    public function getMailClass(): string
     {
-        $this->subscriber = $subscriber;
-        $this->historyPercentageChange = $historyPercentageChange;
+        return PercentageNotificationMail::class;
     }
 
-    public function middleware(): array
+    public function getFieldToUpdate(): string
     {
-        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))];
+        return 'percent_change_notified_on';
     }
 
-    public function handle()
+    public function getJobName(): string
     {
-        try {
-            // Mail::to($this->subscriber->email)->send(
-            //     new PercentageNotificationMail($this->subscriber,
-            //     $this->historyPercentageChange)
-            // );
-
-            Log::info('SendPercentageNotificationJob - Email sent successfully to: '. $this->subscriber->email);
-
-            $this->subscriber->update(['percent_change_notified_on' => Carbon::now()]);
-        } catch (\Exception $e) {
-            Log::error('SendPercentageNotificationJob - Failed to send email to: '. $this->subscriber->id . ' - ' . $this->subscriber->email . ' - ' . $e->getMessage());
-            throw $e;
-        }
-    }
-
-    public function failed(\Exception $exception)
-    {
-        Log::info('SendPercentageNotificationJob - Sending email failed: '. $this->subscriber->email . ' - ' . $exception->getMessage());
-        /** Additional logic to handle failed jobs */
+        return $this->percentageNotificationJobName;
     }
 }

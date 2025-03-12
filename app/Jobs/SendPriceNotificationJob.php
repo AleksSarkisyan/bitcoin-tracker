@@ -3,57 +3,24 @@
 namespace App\Jobs;
 
 use App\Mail\PriceNotificationMail;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Mail;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Bus\Batchable;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
+use App\Jobs\BaseMailNotificationJob;
 
-class SendPriceNotificationJob implements ShouldQueue
+class SendPriceNotificationJob extends BaseMailNotificationJob
 {
-    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
-    /** @var \App\Models\Subscription $subscriber */
-    public $subscriber;
-    public $currentPrice;
-    public $tries = 3;
-
-    public function __construct($subscriber, $currentPrice)
+    public function getMailClass(): string
     {
-        $this->subscriber = $subscriber;
-        $this->currentPrice = $currentPrice;
+        return PriceNotificationMail::class;
     }
 
-    public function middleware(): array
+    public function getFieldToUpdate(): string
     {
-        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))];
+        return 'target_price_notified_on';
     }
 
-    public function handle()
+    public function getJobName(): string
     {
-        try {
-            // Mail::to($this->subscriber['email'])->send(
-            //     new PriceNotificationMail($this->subscriber,
-            //     $this->currentPrice)
-            // );
-
-            Log::info('SendPriceNotificationJob - Email sent successfully to: '. $this->subscriber->email);
-
-            $this->subscriber->update(['target_price_notified_on' => Carbon::now()]);
-        } catch (\Exception $e) {
-            Log::error('SendPriceNotificationJob - Failed to send email to: ' . $this->subscriber->id . ' - ' . $this->subscriber->email . ' - ' . $e->getMessage());
-            throw $e;
-        }
+        return $this->priceNotificationJobName;
     }
 
-    public function failed(\Exception $exception)
-    {
-        Log::info('SendPriceNotificationJob -Sending email failed: '. $this->subscriber->email . ' - ' . $exception->getMessage());
-        /** Additional logic to handle failed jobs */
-    }
+
 }

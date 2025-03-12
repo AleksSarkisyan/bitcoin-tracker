@@ -18,9 +18,10 @@ class SendPercentageNotificationJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $subscriber;
-    protected $historyPercentageChange;
-    protected $tries = 3;
+    /** @var \App\Models\Subscription $subscriber */
+    public $subscriber;
+    public $historyPercentageChange;
+    public $tries = 3;
 
     public function __construct($subscriber, $historyPercentageChange)
     {
@@ -30,7 +31,7 @@ class SendPercentageNotificationJob implements ShouldQueue
 
     public function middleware(): array
     {
-        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))->dontRelease()];
+        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))];
     }
 
     public function handle()
@@ -45,7 +46,8 @@ class SendPercentageNotificationJob implements ShouldQueue
 
             $this->subscriber->update(['percent_change_notified_on' => Carbon::now()]);
         } catch (\Exception $e) {
-            Log::error('SendPercentageNotificationJob - Failed to send email to: ' . $this->subscriber->email . ' - ' . $e->getMessage());
+            Log::error('SendPercentageNotificationJob - Failed to send email to: '. $this->subscriber->id . ' - ' . $this->subscriber->email . ' - ' . $e->getMessage());
+            throw $e;
         }
     }
 

@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use App\Services\NotificationService;
-use App\Repositories\SubscriptionRepositoryInterface;
+use App\Interfaces\SubscriptionRepositoryInterface;
 
 class NotificationServiceProvider extends ServiceProvider
 {

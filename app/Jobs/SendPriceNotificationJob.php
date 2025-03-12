@@ -18,9 +18,10 @@ class SendPriceNotificationJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $subscriber;
-    protected $currentPrice;
-    protected $tries = 3;
+    /** @var \App\Models\Subscription $subscriber */
+    public $subscriber;
+    public $currentPrice;
+    public $tries = 3;
 
     public function __construct($subscriber, $currentPrice)
     {
@@ -30,7 +31,7 @@ class SendPriceNotificationJob implements ShouldQueue
 
     public function middleware(): array
     {
-        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))->dontRelease()];
+        return [(new WithoutOverlapping($this->subscriber->id . $this->subscriber->email))];
     }
 
     public function handle()
@@ -45,7 +46,8 @@ class SendPriceNotificationJob implements ShouldQueue
 
             $this->subscriber->update(['target_price_notified_on' => Carbon::now()]);
         } catch (\Exception $e) {
-            Log::error('SendPriceNotificationJob - Failed to send email to: ' . $this->subscriber->email . ' - ' . $e->getMessage());
+            Log::error('SendPriceNotificationJob - Failed to send email to: ' . $this->subscriber->id . ' - ' . $this->subscriber->email . ' - ' . $e->getMessage());
+            throw $e;
         }
     }
 

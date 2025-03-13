@@ -1,6 +1,8 @@
 <?php
 
-define('BITFINEX_V2_API_BASEURL', env('BITFINEX_V2_API_BASEURL', 'https://api-pub.bitfinex.com/v2/'));
+if (!defined('BITFINEX_V2_API_BASEURL')) {
+    define('BITFINEX_V2_API_BASEURL', env('BITFINEX_V2_API_BASEURL', 'https://api-pub.bitfinex.com/v2/'));
+}
 
 return [
     'v2' => [

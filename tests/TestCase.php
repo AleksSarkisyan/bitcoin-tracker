@@ -5,12 +5,15 @@ namespace Tests;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Tests\Unit\Jobs\FakeSubscriber;
 use App\Models\Subscription;
+use App\Enums\SubscriptionTypes;
+use App\Enums\SymbolNames;
 
 abstract class TestCase extends BaseTestCase
 {
     public $fakeEmail = 'test@example.com';
     public $subscriber;
     public $fakeUser = [
+        'id' => 1,
         'email' => 'test@example.com',
         'target_price' => 80000,
         'symbol' => 'tBTCUSD',
@@ -18,6 +21,11 @@ abstract class TestCase extends BaseTestCase
         'id' => 123,
         'percent_change' => -10
     ];
+
+    public $priceSubscriptionType = SubscriptionTypes::PRICE->value;
+    public $percentageSubscriptionType = SubscriptionTypes::PERCENTAGE->value;
+    public $btcUsdSymbol = SymbolNames::TBTCUSD->value;
+    public $btcEurSymbol = SymbolNames::TBTCEUR->value;
 
     public $faketTickerHistoryResponse = [
         "tBTCUSD",

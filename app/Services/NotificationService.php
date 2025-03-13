@@ -43,7 +43,7 @@ class NotificationService extends ServiceProvider
         $currentPrices = $this->assetPriceRepository->getPriceBySymbolsAndHours($this->availableSymbols, $availableIntervals);
 
         if (empty($currentPrices)) {
-            return $this->currentPricesError($currentPrices);
+            return $this->currentPricesError($this->percentageNotificationJob);
         }
 
         $queryStart = microtime(true);
@@ -122,8 +122,8 @@ class NotificationService extends ServiceProvider
         $subscribers = [];
         $assetPrices = $this->assetPriceRepository->getPriceBySymbols($this->availableSymbols);
 
-        if (empty($assetPrices)) {
-           return $this->currentPricesError($assetPrices);
+        if ($assetPrices->isEmpty()) {
+           return $this->currentPricesError($this->priceNotificationJob);
         }
 
         foreach ($assetPrices as $asset) {
@@ -148,10 +148,10 @@ class NotificationService extends ServiceProvider
         return $this->priceNotificationJob . ' - END!';;
     }
 
-    public function currentPricesError(): string
+    public function currentPricesError(string $jobType): string
     {
         /** Any logic to handle the case when there are no asset prices. Additionally, any logic to handle stale data could be here. */
-        $message = $this->percentageNotificationJob . ' No current prices found!';
+        $message = $jobType . ' No current prices found!';
         Log::info($message);
         return $message;
     }

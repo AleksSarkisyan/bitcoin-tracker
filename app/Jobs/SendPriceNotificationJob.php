@@ -21,6 +21,4 @@ class SendPriceNotificationJob extends BaseMailNotificationJob
     {
         return $this->priceNotificationJobName;
     }
-
-
 }

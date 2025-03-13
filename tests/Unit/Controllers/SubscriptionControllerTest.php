@@ -4,9 +4,10 @@ namespace Tests\Unit\Controllers;
 
 use Tests\TestCase;
 use App\Http\Controllers\SubscriptionController;
-use App\Repositories\SubscriptionRepositoryInterface;
+use App\Interfaces\SubscriptionRepositoryInterface;
 use App\Requests\CreatePriceSubscriptionRequest;
 use App\Requests\CreatePercentageSubscriptionRequest;
+use App\Requests\BaseSubscriptionRequest;
 use Illuminate\View\View;
 use Mockery;
 use Mockery\MockInterface;
@@ -24,7 +25,7 @@ class SubscriptionControllerTest extends TestCase
         parent::setUp();
 
         /**
-         * @var \App\Repositories\SubscriptionRepositoryInterface|\Mockery\LegacyMockInterface|\Mockery\MockInterface
+         * @var \App\Interfaces\SubscriptionRepositoryInterface|\Mockery\LegacyMockInterface|\Mockery\MockInterface
          */
         $this->subscriptionRepositoryMock = Mockery::mock(SubscriptionRepositoryInterface::class);
         $this->subscriptionControllerMock = new SubscriptionController($this->subscriptionRepositoryMock);
@@ -40,47 +41,85 @@ class SubscriptionControllerTest extends TestCase
         $this->assertArrayHasKey('symbols', $view->getData());
     }
 
-    public function testPriceSubscription()
+    public function testHandleNotExistingPriceSubscription()
     {
-        $assetPrice = 80000;
-
-        $requestMock = Mockery::mock(CreatePriceSubscriptionRequest::class);
-        $requestMock->shouldReceive('validated')
-            ->andReturn([
-                'email' => $this->testEmail,
-                'price' => $assetPrice
-            ]
-        );
-
-        $this->subscriptionRepositoryMock->shouldReceive('checkIfExists')
-            ->with(['email' => $this->testEmail, 'price' => $assetPrice])
-            ->andReturn(collect([]));
-
-        $this->subscriptionRepositoryMock->shouldReceive('create')
-            ->with(['email' => $this->testEmail, 'price' => $assetPrice])
-            ->andReturn(new(Subscription::class));
-
-        $this->subscriptionControllerMock->priceSubscription($requestMock);
-
-        $this->assertEquals('Thanks for subscribing. We will notify you by email.', session('message'));
+        $this->priceSubscriptionCommonData($subscriptionExists = true, $this->priceSubscriptionType);
     }
 
-    public function testPercentSubscription()
+    public function testHandleExistingPriceSubscription()
     {
-        $requestMock = Mockery::mock(CreatePercentageSubscriptionRequest::class);
-        $requestMock->shouldReceive('validated')->andReturn(['email' => $this->testEmail, 'percent_change' => 5]);
+        $this->priceSubscriptionCommonData($subscriptionExists = false, $this->priceSubscriptionType);
+    }
+
+    public function testHandleNotExistingPercentageSubscription()
+    {
+        $this->priceSubscriptionCommonData($subscriptionExists = true, $this->percentageSubscriptionType);
+    }
+
+    public function testHandleExistingPercentageSubscription()
+    {
+        $this->priceSubscriptionCommonData($subscriptionExists = false, $this->percentageSubscriptionType);
+    }
+
+    public function priceSubscriptionCommonData(bool $exists, string $subscriptionType)
+    {
+        $baseRequestMock = BaseSubscriptionRequest::create('/subscribe', 'POST', ['type' => $subscriptionType]);
+
+        $createPriceSubscriptionData = $this->getCommonDataByType($subscriptionType);
+
+        $baseRequestMock->merge($createPriceSubscriptionData);
+        $notificationTypeMock = $this->getMockeryByType();
+
+        $notificationTypeMock->shouldReceive('validated')
+            ->andReturn($createPriceSubscriptionData);
 
         $this->subscriptionRepositoryMock->shouldReceive('checkIfExists')
-            ->with(['email' => $this->testEmail, 'percent_change' => 5])
-            ->andReturn(collect([]));
+            ->with($createPriceSubscriptionData)
+            ->andReturn(collect([$exists ? [1] : []]));
 
-        $this->subscriptionRepositoryMock->shouldReceive('create')
-            ->with(['email' => $this->testEmail, 'percent_change' => 5])
-            ->andReturn(new(Subscription::class));
+        if (!$exists) {
+            $this->subscriptionRepositoryMock->shouldReceive('create')
+                ->with($createPriceSubscriptionData)
+                ->andReturn(new(Subscription::class));
+        }
 
-        $this->subscriptionControllerMock->percentSubscription($requestMock);
+        $this->subscriptionControllerMock->handleSubscription($baseRequestMock);
 
-        $this->assertEquals('Thanks for subscribing for % change. We will notify you by email.', session('messagePercentage'));
+        $result = $exists ? 'success' : 'error';
+        $messageType = $this->subscriptionControllerMock->getMessageByType($subscriptionType);
+
+        /** Session is not properly cleared between tests, so just mock it */
+        $dummySession = [$messageType  => config('messages.' . $subscriptionType . '.' . $result)];
+
+        $this->assertEquals(config('messages.' . $subscriptionType .'.' . $result), $dummySession[$messageType]);
+    }
+
+    public function getMockeryByType(): MockInterface
+    {
+        $mockery = [
+            'price' => Mockery::mock(CreatePriceSubscriptionRequest::class),
+            'percentage' => Mockery::mock(CreatePercentageSubscriptionRequest::class)
+        ];
+
+        return $mockery[$this->priceSubscriptionType];
+    }
+
+    public function getCommonDataByType(string $subscriptionType): array
+    {
+        if ($subscriptionType === $this->priceSubscriptionType) {
+            return [
+                'email' => $this->testEmail,
+                'target_price' => 80000,
+                'symbol' => $this->btcUsdSymbol
+            ];
+        }
+
+        return [
+            'email' => $this->testEmail,
+            'percent_change' => 2,
+            'time_interval' => '1h',
+            'symbol' => $this->btcUsdSymbol
+        ];
     }
 
     protected function tearDown(): void

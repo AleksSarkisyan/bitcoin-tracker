@@ -1,3 +1,5 @@
+Uses Redis queue and schedules to process subscribers and send emails. Tries to follow Laravel best practices. 
+
 Useful commands
 
 gedit .bashrc

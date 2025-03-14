@@ -135,7 +135,7 @@ class NotificationService extends ServiceProvider
                     Log::info($this->priceNotificationJob . ' Found ' . $subscribers->count() . ' records');
 
                     foreach ($subscribers as $subscriber) {
-                        $priceNotificationJobs[] = new SendPriceNotificationJob($subscriber, $asset['current_price']);
+                        $priceNotificationJobs[] = new SendPriceNotificationJob($subscriber, $asset->current_price);
                     }
 
                     Helper::batchJobs($priceNotificationJobs);

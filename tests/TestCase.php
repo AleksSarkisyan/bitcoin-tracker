@@ -7,6 +7,7 @@ use Tests\Unit\Jobs\FakeSubscriber;
 use App\Models\Subscription;
 use App\Enums\SubscriptionTypes;
 use App\Enums\SymbolNames;
+use Mockery;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -56,4 +57,17 @@ abstract class TestCase extends BaseTestCase
         return new Subscription($this->fakeUser);
     }
 
+    public function getMockSubscriber()
+    {
+        $subscriber = Mockery::mock(Subscription::class);
+        $subscriber->shouldIgnoreMissing();
+        $subscriber->symbol = $this->btcUsdSymbol;
+        $subscriber->time_interval = '1h';
+        $subscriber->percent_change = 5;
+        $subscriber->target_price = 80000;
+        $subscriber->id = 123;
+        $subscriber->email = $this->fakeEmail;
+
+        return $subscriber;
+    }
 }

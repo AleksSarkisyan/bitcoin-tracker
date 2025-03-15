@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use App\Facades\Notification;
+use App\Facades\AssetPrice;
 
 class CreateAssetPriceCommand extends Command
 {
@@ -26,6 +26,7 @@ class CreateAssetPriceCommand extends Command
      */
     public function handle()
     {
+        AssetPrice::create();
 
         return true;
     }

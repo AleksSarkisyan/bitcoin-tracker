@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Tests\Unit\Jobs\FakeSubscriber;
 use Mockery;
 
+// Needs refactoring to match current logic
 class SendPriceNotificationJobTest extends TestCase
 {
     public $currentPrice;

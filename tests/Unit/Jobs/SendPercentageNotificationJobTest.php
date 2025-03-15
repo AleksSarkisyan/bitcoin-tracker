@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Mockery;
 
+// Needs refactoring to match current logic
 class SendPercentageNotificationJobTest extends TestCase
 {
     public $historyPercentageChange;

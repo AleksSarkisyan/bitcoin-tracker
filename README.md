@@ -1,6 +1,30 @@
 Uses Redis queue and schedules to process subscribers and send emails. Tries to follow Laravel best practices. 
 
-Useful commands
+In short:
+- Batchable queue jobs that handle mail notifications
+- Commands for cron execution
+- Repositories to handle DB queries
+- Interfaces that are used as contracts for repositories
+- Service classes to hold app logic
+- Facades for easier access to service classes
+- Providers that bind a service class to a facade using singletons
+- Chunking DB results for faster retrieval and splitting
+- MySql partitioning to split large data to smaller chunks
+- Requests to validate form data
+- Enums for better code clarity
+- DTOs for defining and transferring data better
+- Some unit tests, but more should be done
+
+Commands to run:
+
+- composer install
+- php artisan migrate
+- php artisan db:seed --class=SubscriptionSeeder
+- php artisan serve
+- php artisan schedule:work
+- php artisan queue:work
+
+Commands used during development:
 
 gedit .bashrc
 export PATH="~/.config/composer/vendor/bin:$PATH"
@@ -12,9 +36,7 @@ composer selfupdate
 nvm use 18
 
 mysqladmin -u root -p create notifications
-php artisan migrate
 
-php artisan serve
 composer run dev
 
 php artisan make:command PriceSubscriptionCommand

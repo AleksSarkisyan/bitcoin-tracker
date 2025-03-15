@@ -14,6 +14,7 @@ In short:
 - Enums for better code clarity
 - DTOs for defining and transferring data better
 - Some unit tests, but more should be done
+- Uses Http client for making the API calls
 
 Commands to run:
 
@@ -23,6 +24,10 @@ Commands to run:
 - php artisan serve
 - php artisan schedule:work
 - php artisan queue:work
+
+Additional steps:
+- Update MAIL_* variable in .env
+- QUEUE_CONNECTION=redis
 
 Commands used during development:
 
